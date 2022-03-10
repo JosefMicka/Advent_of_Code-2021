@@ -11,14 +11,15 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "Sonar.h"
 
 /**
- * @brief Input data
+ * @brief Size of character buffer
  * 
  */
-int sonarData[] = {199, 200, 208, 210, 200, 207, 240, 269, 260, 263};
+#define LINE_LEN 20
 
 
 /**
@@ -26,29 +27,50 @@ int sonarData[] = {199, 200, 208, 210, 200, 207, 240, 269, 260, 263};
  * 
  * @return int 
  */
-int main() {
+int main(int argc, char *argv[]) {
 
-    // Get number of elements in sonarData array     
-    int count = sizeof(sonarData)/sizeof(sonarData[0]);
+    char line[LINE_LEN];
+    int count_inc = 0;
 
-    // Check the data
-    for (int i = 0; i < count; i++)
+    // Initialize values to the negative number because depth cannot have a negative value.
+    int prev_value = -1;
+    int new_value = -1;
+
+    FILE *pfl = fopen(argv[1], "r");
+
+    if (pfl == NULL)
     {
-        printf("%d ", sonarData[i]);
-        if (i == 0) // The first sample must be skipped because there is no previous reference value
+        exit(1);
+    }
+    
+    // Go through input data
+    while (fgets(line, LINE_LEN, pfl))
+    {
+        new_value = atoi(line);
+
+        printf("%d ", new_value);
+
+        if (prev_value < 0) // The first sample must be skipped because there is no previous reference value
         {
             printf("(N/A - no previous measurement)\r\n");
         }
         else
         {
             // Check the change of value
-            switch(DepthCheck(sonarData[i-1], sonarData[i]))
+            switch(DepthCheck(prev_value, new_value))
             {
                 case DEPTH_DECREASED: printf("(decreased)\r\n"); break;
-                case DEPTH_INCREASED: printf("(increased)\r\n"); break;
+                case DEPTH_INCREASED: printf("(increased)\r\n"); count_inc++; break;
                 case DEPTH_NOTCHANGED: printf("(not changed)\r\n"); break;
             }
         }
+        prev_value = new_value; 
     }
+    
+    fclose(pfl);
+
+    // Give a final report
+    printf("Measurement value increased: %d times\n\r", count_inc);
+
     return 0;
 }
